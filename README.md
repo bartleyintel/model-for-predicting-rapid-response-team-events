@@ -1,16 +1,14 @@
-# sharp-patient-risk-poc
+# Model For Predicting Rapid Response Events
 
 # Overview
 
-### Below is the file structure of the tech-transfer
+### Below is the file structure of the project documentation
 
 ```
-tech-transfer
+Overview Documentation
 |   - README.md
 │   - OVERVIEW.ipynb
-|   - Sharp-Intel-Technology-Transfer-Workshop.pdf
-|   - sharppatientrisk.yml
-|   - datamodel.zip
+|   - predictingRRTevents.yml
 │
 └───pipeline
 |    |
