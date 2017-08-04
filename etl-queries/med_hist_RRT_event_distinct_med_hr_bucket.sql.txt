@@ -1,0 +1,81 @@
+-- Count number of distinct medications administered in 10 hourly buckets 
+-- leading up to event.
+
+CREATE TABLE dr_med_hist_rrt_event_distinct_med_hr_bucket
+STORED AS PARQUET
+AS
+
+SELECT 
+    rrt.enc_id
+,   rrt.enc_checkin_dt_tm
+,   rrt.enc_arrive_dt_dt
+,   rrt.enc_reg_dt_tm
+,   rrt.enc_start_dt_tm
+,   rrt.rrt_evt_id
+,   rrt.rrt_evt_dt_tm
+,   rrt.rrt_evt_tag
+,   rrt.rrt_evt_text
+,   rrt.rrt_evt_ordinal_hr
+,   hm0.cnt AS C0
+,   hm1.cnt AS C1
+,   hm2.cnt AS C2
+,   hm3.cnt AS C3
+,   hm4.cnt AS C4
+,   hm5.cnt AS C5
+,   hm6.cnt AS C6
+,   hm7.cnt AS C7
+,   hm8.cnt AS C8
+,   hm9.cnt AS C9
+
+FROM 
+    dr_med_hist_rrt_event       rrt
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm0
+ON  rrt.enc_id                         = hm0.enc_id
+AND rrt.rrt_evt_ordinal_hr             = hm0.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm1
+ON  rrt.enc_id                         = hm1.enc_id
+AND rrt.rrt_evt_ordinal_hr  - 1        = hm1.med_evt_ordinal_hr
+    
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm2
+ON  rrt.enc_id                         = hm2.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 2        = hm2.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm3
+ON  rrt.enc_id                         = hm3.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 3        = hm3.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm4
+ON  rrt.enc_id                         = hm4.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 4        = hm4.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm5
+ON  rrt.enc_id                         = hm5.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 5        = hm5.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm6
+ON  rrt.enc_id                         = hm6.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 6        = hm6.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm7
+ON  rrt.enc_id                         = hm7.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 7        = hm7.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm8
+ON  rrt.enc_id                         = hm8.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 8        = hm8.med_evt_ordinal_hr
+
+LEFT OUTER JOIN
+    dr_med_hist_encntr_distinct_med_admin_hr_cnt  hm9
+ON  rrt.enc_id                         = hm9.enc_id    
+AND rrt.rrt_evt_ordinal_hr  - 9        = hm9.med_evt_ordinal_hr    

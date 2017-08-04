@@ -1,0 +1,37 @@
+-- Compare different event/encounter timestamps
+
+SELECT enc.encntr_id
+-- ,from_unixtime(CAST(ce.performed_dt_tm   / 1000 as bigint)) AS ce_performed
+-- ,from_unixtime(CAST(ce.valid_from_dt_tm  / 1000 as bigint)) AS ce_valid_from
+-- ,from_unixtime(CAST(ce.event_end_dt_tm   / 1000 as bigint)) AS ce_event_end
+,from_unixtime(CAST(enc.arrive_dt_tm/1000 as bigint)) AS enc_arrive
+-- ,from_unixtime(CAST(enc.depart_dt_tm/1000 as bigint)) AS enc_depart
+,from_unixtime(CAST(tci.checkin_dt_tm/1000 as bigint)) AS ti_checkin
+,enc.arrive_dt_tm, tci.checkin_dt_tm
+-- ,from_unixtime(CAST(tc.checkout_dt_tm/1000 as bigint)) AS ti_checkout
+,COALESCE(tci.checkin_dt_tm, enc.arrive_dt_tm) AS check_in_time
+
+FROM encounter enc
+
+INNER JOIN clinical_event ce
+ON ce.encntr_id = enc.encntr_id
+
+LEFT OUTER JOIN
+(SELECT ti.encntr_id AS encntr_id, MIN(tc.checkin_dt_tm) AS checkin_dt_tm
+ FROM tracking_item ti
+ JOIN tracking_checkin tc ON ti.tracking_id = tc.tracking_id
+ GROUP BY ti.encntr_id) tci
+ON tci.encntr_id = enc.encntr_id
+
+
+WHERE enc.loc_facility_cd='633867'
+AND enc.encntr_complete_dt_tm < 4e12
+AND enc.admit_type_cd!='0'
+AND enc.encntr_type_class_cd='391'
+AND ce.event_cd='54411998'
+AND ce.result_status_cd NOT IN ('31', '36')
+AND ce.valid_until_dt_tm > 4e12
+AND ce.event_class_cd not in ('654645')
+-- GROUP BY enc.encntr_id
+
+LIMIT 100;

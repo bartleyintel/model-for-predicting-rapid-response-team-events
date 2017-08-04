@@ -1,0 +1,31 @@
+-- count encounters that use class of medication in them.
+
+SELECT mdx.multum_category_id, mdc.category_name, count(1)
+
+FROM (SELECT encntr_id, cki, substr(cki,9) as cki_id, order_id FROM orders) ords
+LEFT OUTER JOIN mltm_category_drug_xref mdx ON ords.cki_id = mdx.drug_identifier
+
+LEFT OUTER JOIN mltm_drug_categories mdc ON mdc.multum_category_id = mdx.multum_category_id
+
+
+WHERE ords.encntr_id IN (
+  SELECT DISTINCT encntr_id
+  FROM encounter
+  WHERE loc_facility_cd='633867'
+  AND encntr_complete_dt_tm < 4e12
+  AND admit_type_cd != '0'
+  AND encntr_id NOT IN (  -- Add/remove "NOT" to select from or not from encounters from RRT events
+    SELECT DISTINCT encntr_id
+    FROM clinical_event
+    WHERE event_cd='54411998'
+    AND result_status_cd NOT IN ('31', '36')
+    AND valid_until_dt_tm > 4e12
+    AND event_class_cd not in ('654645')
+    )
+  )
+
+AND mdx.multum_category_id IN ('82', '60', '191', '77', '210', '251', '341', '20', '21',
+                               '22', '23', '24', '25', '26')
+GROUP BY mdx.multum_category_id, mdc.category_name
+ORDER BY mdx.multum_category_id ASC
+;

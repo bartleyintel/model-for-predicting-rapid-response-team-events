@@ -1,0 +1,24 @@
+-- given a known person_id, return information about that person.
+
+SELECT person.person_id, person.race_cd, cv_race.description, person.ethnic_grp_cd, cv_ethnic.description,
+person.marital_type_cd, cv_marital.description,
+person.sex_cd, cv_sex.description,
+person.deceased_cd, cv_dec.description,
+from_unixtime(CAST(person.deceased_dt_tm/1000 as bigint)) AS person_deceased_date,
+person.cause_of_death,
+from_unixtime(CAST(person.birth_dt_tm/1000 as bigint)) AS person_birth_date,
+(year(now()) - year(from_unixtime(CAST(person.birth_dt_tm/1000 as bigint)))) AS approx_age,
+person.military_service_cd, cv_mil.description,
+person.vet_military_status_cd, cv_vet.description
+
+FROM person
+
+LEFT OUTER JOIN code_value cv_race ON person.race_cd =cv_race.code_value
+LEFT OUTER JOIN code_value cv_ethnic ON person.ethnic_grp_cd = cv_ethnic.code_value
+LEFT OUTER JOIN code_value cv_marital ON person.marital_type_cd = cv_marital.code_value
+LEFT OUTER JOIN code_value cv_sex ON person.sex_cd = cv_sex.code_value
+LEFT OUTER JOIN code_value cv_dec ON person.deceased_cd = cv_dec.code_value
+LEFT OUTER JOIN code_value cv_mil ON person.military_service_cd = cv_mil.code_value
+LEFT OUTER JOIN code_value cv_vet ON person.vet_military_status_cd = cv_vet.code_value
+
+WHERE person_id = '5443079';

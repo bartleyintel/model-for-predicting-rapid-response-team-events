@@ -1,0 +1,116 @@
+-- join rows in model scoring table to associated encounter and patient
+
+-- CREATE TABLE dr_demo_scores
+-- STORED AS PARQUET
+-- AS
+
+SELECT
+    first_name
+,   origin AS obs_nbr
+,   age
+,   score
+,   pulse_rcnt
+,   pulse_mean
+,   rr_mean
+,   sbp_mean
+,   temp_mean
+,   dbp_mean
+,   rr_rcnt
+,   dbp_rcnt
+,   spo2_mean
+
+FROM (
+
+SELECT
+    enc.encntr_id             AS encntr_id
+,   1                         AS origin
+,   p.name_first              AS first_name
+,   t0.age                    AS age
+,   t0.score                  AS score
+,   round(t0.pulse_recent,1)  AS pulse_rcnt
+,   round(t0.pulse_mean,1)    AS pulse_mean
+,   round(t0.rr_mean,1)       AS rr_mean
+,   round(t0.sbp_mean,1)      AS sbp_mean
+,   round(t0.temp_mean,1)     AS temp_mean
+,   round(t0.dbp_mean,1)      AS dbp_mean
+,   round(t0.rr_recent,1)     AS rr_rcnt
+,   round(t0.dbp_recent,1)    AS dbp_rcnt
+,   round(t0.spo2_mean,1)     AS spo2_mean
+FROM
+    eys_examplepatientsscores_0_12hrs t0
+
+JOIN
+    encounter enc
+ON
+    t0.encntr_id = enc.encntr_id
+
+JOIN
+    person p
+ON
+    enc.person_id = p.person_id
+
+UNION
+
+SELECT
+    enc.encntr_id             AS encntr_id
+,   2                         AS origin
+,   p.name_first              AS first_name
+,   t0.age                    AS age
+,   t0.score                  AS score
+,   round(t0.pulse_recent,1)  AS pulse_rcnt
+,   round(t0.pulse_mean,1)    AS pulse_mean
+,   round(t0.rr_mean,1)       AS rr_mean
+,   round(t0.sbp_mean,1)      AS sbp_mean
+,   round(t0.temp_mean,1)     AS temp_mean
+,   round(t0.dbp_mean,1)      AS dbp_mean
+,   round(t0.rr_recent,1)     AS rr_rcnt
+,   round(t0.dbp_recent,1)    AS dbp_rcnt
+,   round(t0.spo2_mean,1)     AS spo2_mean
+FROM
+    eys_examplepatientsscores_12_24hrs t0
+
+JOIN
+    encounter enc
+ON
+    t0.encntr_id = enc.encntr_id
+
+JOIN
+    person p
+ON
+    enc.person_id = p.person_id
+
+UNION
+
+SELECT
+    enc.encntr_id             AS encntr_id
+,   3                         AS origin
+,   p.name_first              AS first_name
+,   t0.age                    AS age
+,   t0.score                  AS score
+,   round(t0.pulse_recent,1)  AS pulse_rcnt
+,   round(t0.pulse_mean,1)    AS pulse_mean
+,   round(t0.rr_mean,1)       AS rr_mean
+,   round(t0.sbp_mean,1)      AS sbp_mean
+,   round(t0.temp_mean,1)     AS temp_mean
+,   round(t0.dbp_mean,1)      AS dbp_mean
+,   round(t0.rr_recent,1)     AS rr_rcnt
+,   round(t0.dbp_recent,1)    AS dbp_rcnt
+,   round(t0.spo2_mean,1)     AS spo2_mean
+FROM
+    eys_examplepatientsscores_24_36hrs t0
+
+JOIN
+    encounter enc
+ON
+    t0.encntr_id = enc.encntr_id
+
+JOIN
+    person p
+ON
+    enc.person_id = p.person_id
+
+) t
+
+ORDER BY
+    first_name
+,   obs_nbr

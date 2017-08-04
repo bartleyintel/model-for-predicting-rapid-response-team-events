@@ -1,0 +1,78 @@
+-- Associate RRT event with ordinal hour of occurance
+-- within the encounter
+
+-- CREATE TABLE dr_med_hist_RRT_event
+-- STORED AS PARQUET
+-- AS
+
+-- SELECT COUNT(1) FROM (
+SELECT * FROM (
+
+SELECT
+	enc_id											AS enc_id
+,	from_unixtime(enc_checkin_dt_tm)				AS enc_checkin_dt_tm
+,	from_unixtime(enc_arrive_dt_tm)					AS enc_arrive_dt_dt
+,	from_unixtime(enc_reg_dt_tm)					AS enc_reg_dt_tm
+,	from_unixtime(enc_start_dt_tm)					AS enc_start_dt_tm
+,	rrt_evt_id										AS rrt_evt_id
+,	from_unixtime(rrt_evt_dt_tm)					AS rrt_evt_dt_tm
+,	rrt_evt_text									AS rrt_evt_text
+,	rrt_evt_tag										AS rrt_evt_tag
+,   CAST((rrt_evt_dt_tm - enc_start_dt_tm)
+         / 3600
+         + 1
+         AS BIGINT)                                 AS rrt_evt_ordinal_hr
+FROM
+(	SELECT
+		enc.encntr_id                                      AS enc_id
+	,   CAST(tci.checkin_dt_tm          / 1000 as bigint)  AS enc_checkin_dt_tm
+	,   CAST(enc.arrive_dt_tm           / 1000 as bigint)  AS enc_arrive_dt_tm
+	,   CAST(enc.reg_dt_tm              / 1000 as bigint)  AS enc_reg_dt_tm
+	,   CAST(COALESCE(tci.checkin_dt_tm
+					,enc.arrive_dt_tm
+					,enc.reg_dt_tm)    / 1000 as bigint)  AS enc_start_dt_tm
+	,   ce.clinical_event_id                               AS rrt_evt_id
+	,   CAST(ce.event_end_dt_tm         / 1000 as bigint)  AS rrt_evt_dt_tm
+	,   ce.event_title_text                                AS rrt_evt_text
+	,   ce.event_tag                                       AS rrt_evt_tag
+
+	FROM encounter enc
+
+	-- RRT event is a clinical_event
+	JOIN clinical_event ce
+	ON enc.encntr_id  = ce.encntr_id
+
+	-- pick up optional check-in event for encounter
+	LEFT OUTER JOIN
+	(  SELECT
+		ti.encntr_id           AS encntr_id
+		-- there may be several check-ins
+		-- we want the first
+	,   MIN(tc.checkin_dt_tm)  AS checkin_dt_tm
+	FROM
+		tracking_item     ti
+	JOIN
+		tracking_checkin  tc
+	ON
+		ti.tracking_id  = tc.tracking_id
+	GROUP BY
+		ti.encntr_id
+	) tci
+
+	ON
+		enc.encntr_id = tci.encntr_id
+
+	-- additional criteria to isolate RRT events
+	WHERE
+		enc.loc_facility_cd       = '633867'     -- sharp memorial
+	AND enc.encntr_complete_dt_tm < 4e12         -- complete encounter
+	AND ce.event_cd               = '54411998'   -- RRT Event code
+	AND ce.result_status_cd  NOT IN ('31', '36') -- if result is good or not -- add this to others?
+	AND ce.valid_until_dt_tm      > 4e12         -- to grab only valid events -- add this to others?
+	AND ce.event_class_cd    NOT IN ('654645')   -- more accoutnting for errors - date/time correction
+	AND enc.admit_type_cd        != '0'          -- control for type of patient
+	AND enc.encntr_type_class_cd  ='391'         -- control for class type - want inpatient
+
+) rrt
+
+) t

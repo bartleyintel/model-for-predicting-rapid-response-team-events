@@ -1,0 +1,122 @@
+-- Use windowing functions to show changes in score and feature values across sequential rows in model scoring table.
+
+-- CREATE TABLE dr_demo_scores_with_changes
+-- STORED AS PARQUET
+-- AS
+
+SELECT
+    first_name
+,   age
+,   obs_nbr
+,   score
+,   round(score -      LAG(score,1)       OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS score_chg
+,   pulse_rcnt
+,   round(pulse_rcnt - LAG(pulse_rcnt,1)  OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS pulse_rcnt_chg
+,   pulse_mean
+,   round(pulse_mean - LAG(pulse_mean,1)  OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS pulse_mean_chg
+,   rr_mean
+,   round(rr_mean    - LAG(rr_mean,1)     OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS rr_mean_chg
+,   sbp_mean
+,   round(sbp_mean   - LAG(sbp_mean,1)    OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS sbp_mean_chg
+,   temp_mean
+,   round(temp_mean  - LAG(temp_mean,1)   OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS temp_mean_chg
+,   dbp_mean
+,   round(dbp_mean   - LAG(dbp_mean,1)    OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS dbp_mean_chg
+,   rr_rcnt
+,   round(rr_rcnt    - LAG(rr_rcnt,1)     OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS rr_rcnt_chg
+,   dbp_rcnt
+,   round(dbp_rcnt   - LAG(dbp_rcnt,1)    OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS dbp_rcnt_chg
+,   spo2_mean
+,   round(spo2_mean  - LAG(spo2_mean,1)   OVER (PARTITION BY encntr_id ORDER BY obs_nbr),2) AS spo2_mean_chg
+
+FROM (
+
+SELECT
+    enc.encntr_id             AS encntr_id
+,   1                         AS obs_nbr
+,   p.name_first              AS first_name
+,   t0.age                    AS age
+,   t0.score                  AS score
+,   round(t0.pulse_recent,1)  AS pulse_rcnt
+,   round(t0.pulse_mean,1)    AS pulse_mean
+,   round(t0.rr_mean,1)       AS rr_mean
+,   round(t0.sbp_mean,1)      AS sbp_mean
+,   round(t0.temp_mean,1)     AS temp_mean
+,   round(t0.dbp_mean,1)      AS dbp_mean
+,   round(t0.rr_recent,1)     AS rr_rcnt
+,   round(t0.dbp_recent,1)    AS dbp_rcnt
+,   round(t0.spo2_mean,1)     AS spo2_mean
+FROM
+    eys_examplepatientsscores_0_12hrs t0
+
+JOIN
+    encounter enc
+ON
+    t0.encntr_id = enc.encntr_id
+
+JOIN
+    person p
+ON
+    enc.person_id = p.person_id
+
+UNION
+
+SELECT
+    enc.encntr_id             AS encntr_id
+,   2                         AS obs_nbr
+,   p.name_first              AS first_name
+,   t0.age                    AS age
+,   t0.score                  AS score
+,   round(t0.pulse_recent,1)  AS pulse_rcnt
+,   round(t0.pulse_mean,1)    AS pulse_mean
+,   round(t0.rr_mean,1)       AS rr_mean
+,   round(t0.sbp_mean,1)      AS sbp_mean
+,   round(t0.temp_mean,1)     AS temp_mean
+,   round(t0.dbp_mean,1)      AS dbp_mean
+,   round(t0.rr_recent,1)     AS rr_rcnt
+,   round(t0.dbp_recent,1)    AS dbp_rcnt
+,   round(t0.spo2_mean,1)     AS spo2_mean
+FROM
+    eys_examplepatientsscores_12_24hrs t0
+
+JOIN
+    encounter enc
+ON
+    t0.encntr_id = enc.encntr_id
+
+JOIN
+    person p
+ON
+    enc.person_id = p.person_id
+
+UNION
+
+SELECT
+    enc.encntr_id             AS encntr_id
+,   3                         AS obs_nbr
+,   p.name_first              AS first_name
+,   t0.age                    AS age
+,   t0.score                  AS score
+,   round(t0.pulse_recent,1)  AS pulse_rcnt
+,   round(t0.pulse_mean,1)    AS pulse_mean
+,   round(t0.rr_mean,1)       AS rr_mean
+,   round(t0.sbp_mean,1)      AS sbp_mean
+,   round(t0.temp_mean,1)     AS temp_mean
+,   round(t0.dbp_mean,1)      AS dbp_mean
+,   round(t0.rr_recent,1)     AS rr_rcnt
+,   round(t0.dbp_recent,1)    AS dbp_rcnt
+,   round(t0.spo2_mean,1)     AS spo2_mean
+FROM
+    eys_examplepatientsscores_24_36hrs t0
+
+JOIN
+    encounter enc
+ON
+    t0.encntr_id = enc.encntr_id
+
+JOIN
+    person p
+ON
+    enc.person_id = p.person_id
+
+) scores

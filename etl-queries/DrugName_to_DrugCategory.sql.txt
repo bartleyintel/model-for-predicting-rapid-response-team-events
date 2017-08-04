@@ -1,0 +1,11 @@
+-- Have partial drug name, want to see what category it belongs to
+
+SELECT mdn.drug_synonym_id, mdn.drug_name, mdc.category_name, mdn.is_obsolete
+FROM mltm_drug_name mdn
+
+LEFT OUTER JOIN mltm_drug_id mdi ON mdn.drug_synonym_id = mdi.drug_synonym_id
+LEFT OUTER JOIN mltm_category_drug_xref mdx ON mdi.drug_identifier = mdx.drug_identifier
+LEFT OUTER JOIN mltm_drug_categories mdc ON mdc.multum_category_id = mdx.multum_category_id
+
+WHERE lower(mdn.drug_name) LIKE '%naloxone%'
+AND mdn.is_obsolete='F';

@@ -1,0 +1,15 @@
+-- Count number of medication administrations in each ordinal hour of encounter
+
+-- CREATE TABLE dr_med_hist_encntr_med_admin_hr_cnt
+-- STORED AS PARQUET
+-- AS
+
+SELECT
+    enc_id
+,   med_evt_ordinal_hr
+,   COUNT(1) AS cnt
+FROM
+    dr_med_hist_encntr_med_admin
+GROUP BY
+    enc_id
+,   med_evt_ordinal_hr

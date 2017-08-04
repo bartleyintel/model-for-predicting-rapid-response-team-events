@@ -1,0 +1,6 @@
+SELECT DISTINCT ckis.cki, mdx.multum_category_id, mdc.category_name
+FROM (SELECT substr(cki,9) AS cki FROM orders) ckis
+JOIN mltm_category_drug_xref mdx
+ON ckis.cki = mdx.drug_identifier
+LEFT OUTER JOIN mltm_drug_categories mdc
+ON mdc.multum_category_id = mdx.multum_category_id;

@@ -1,0 +1,746 @@
+-- Movement of patients between locations or levels of care has been identified
+-- as a possible predictive feature.  This query builds a history of movements
+-- through a union of encounter and encntr_loc_hist tables.
+
+
+--CREATE TABLE DR_location_changes AS
+
+SELECT *
+
+FROM (
+
+-- union of encounter and encntr_loc_hist
+-- ordered by encntr_id, orign (which union table), and arrive_dt_tm
+-- partitioned by by encntr_id
+
+
+SELECT
+encntr_id,
+origin,
+encntr_loc_hist_id,
+
+updt_cnt,
+updt_dt_tm,
+
+beg_effective_dt_tm,
+end_effective_dt_tm,
+
+transaction_dt_tm,
+activity_dt_tm,
+
+arrive_dt_tm,
+depart_dt_tm,
+
+admit_type_cd,
+admit_type_display,
+admit_type_description,
+
+encntr_type_class_cd,
+encntr_type_class_display,
+encntr_type_class_description,
+
+encntr_type_cd,
+encntr_type_display,
+encntr_type_description,
+encntr_type_definition,
+
+-- flags indicated changes between this record and next in partition
+CASE
+    WHEN location_cd <> LEAD(location_cd,1)
+	                    OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS location_cd_chg,
+
+CASE
+    WHEN med_service_cd <> LEAD(med_service_cd,1)
+	                       OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS med_service_cd_chg,
+
+CASE
+    WHEN accommodation_cd <> LEAD(accommodation_cd,1)
+	                         OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS accommodation_cd_chg,
+
+CASE
+    WHEN alt_lvl_care_cd <> LEAD(alt_lvl_care_cd,1)
+	                        OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS alt_lvl_care_cd_chg,
+
+CASE
+    WHEN specialty_unit_cd <> LEAD(specialty_unit_cd,1)
+	                          OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS specialty_unit_cd_chg,
+
+CASE
+    WHEN loc_facility_cd <> LEAD(loc_facility_cd,1)
+	                          OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS loc_facility_cd_chg,
+
+CASE
+    WHEN loc_building_cd <> LEAD(loc_building_cd,1)
+	                          OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS loc_building_cd_chg,
+
+CASE
+    WHEN loc_nurse_unit_cd <> LEAD(loc_nurse_unit_cd,1)
+	                          OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS loc_nurse_unit_cd_chg,
+
+CASE
+    WHEN loc_room_cd <> LEAD(loc_room_cd,1)
+	                          OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS loc_room_cd_chg,
+
+CASE
+    WHEN loc_bed_cd <> LEAD(loc_bed_cd,1)
+	                          OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+    THEN 1
+    ELSE 0
+END AS loc_bed_cd_chg,
+
+
+location_temp_ind,
+chart_comment_ind,
+comment_text,
+
+location_status_cd,
+location_status_display,
+location_status_description,
+
+transfer_reason_cd,
+transfer_reason_display,
+transfer_reason_description,
+
+loc_facility_cd,
+loc_facility_display,
+loc_facility_description,
+
+LEAD(loc_facility_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_facility_cd,
+LEAD(loc_facility_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_facility_display,
+LEAD(loc_facility_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_facility_description,
+
+loc_building_cd,
+loc_building_display,
+loc_building_description,
+
+LEAD(loc_building_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_building_cd,
+LEAD(loc_building_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_building_display,
+LEAD(loc_building_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_building_description,
+
+loc_nurse_unit_cd,
+loc_nurse_unit_display,
+loc_nurse_unit_description,
+
+LEAD(loc_nurse_unit_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_nurse_unit_cd,
+LEAD(loc_nurse_unit_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_nurse_unit_display,
+LEAD(loc_nurse_unit_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_nurse_unit_description,
+
+loc_room_cd,
+loc_room_display,
+loc_room_description,
+
+LEAD(loc_room_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_room_cd,
+LEAD(loc_room_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_room_display,
+LEAD(loc_room_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_room_description,
+
+loc_bed_cd,
+loc_bed_display,
+loc_bed_description,
+
+LEAD(loc_bed_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_bed_cd,
+LEAD(loc_bed_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_bed_display,
+LEAD(loc_bed_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_loc_bed_description,
+
+location_cd,
+LEAD(location_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_location_cd,
+
+location_display,
+LEAD(location_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_location_display,
+
+location_description,
+LEAD(location_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_location_description,
+
+med_service_cd,
+LEAD(med_service_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_med_service_cd,
+
+med_service_display,
+LEAD(med_service_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_med_service_display,
+
+med_service_description,
+LEAD(med_service_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_med_service_description,
+
+accommodation_request_cd,
+accommodation_request_display,
+accommodation_request_description,
+
+accommodation_cd,
+LEAD(accommodation_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_accommodation_cd,
+
+accommodation_display,
+LEAD(accommodation_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_accommodation_display,
+
+accommodation_description,
+LEAD(accommodation_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_accommodation_description,
+
+accommodation_reason_cd,
+accommodation_reason_display,
+accommodation_reason_description,
+
+alt_lvl_care_dt_tm,
+alt_lvl_care_cd,
+LEAD(alt_lvl_care_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_alt_lvl_care_cd,
+
+alt_lvl_care_display,
+LEAD(alt_lvl_care_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_alt_lvl_care_display,
+
+alt_lvl_care_description,
+LEAD(alt_lvl_care_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_alt_lvl_care_description,
+
+alc_reason_cd,
+alc_reason_display,
+alc_reason_description,
+alc_decomp_dt_tm,
+
+service_category_cd,
+LEAD(service_category_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_service_category_cd,
+
+service_category_display,
+LEAD(service_category_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_service_category_display,
+
+service_category_description,
+LEAD(service_category_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_service_category_description,
+
+program_service_cd,
+LEAD(program_service_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_program_service_cd,
+
+program_service_display,
+LEAD(program_service_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_program_service_display,
+
+program_service_description,
+LEAD(program_service_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_program_service_description,
+
+specialty_unit_cd,
+LEAD(specialty_unit_cd,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_specialty_unit_cd,
+
+specialty_unit_display,
+LEAD(specialty_unit_display,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_specialty_unit_display,
+
+specialty_unit_description,
+LEAD(specialty_unit_description,1)
+OVER (PARTITION BY encntr_id ORDER BY origin DESC, arrive_dt_tm DESC)
+AS next_specialty_unit_description,
+
+isolation_cd,
+isolation_display,
+isolation_description,
+
+security_access_cd,
+security_access_display,
+security_access_description,
+
+change_bit,
+tracking_bit
+
+FROM
+  (  -- part 1, encounter
+     SELECT
+    'E' AS origin,
+
+    'NA' AS encntr_loc_hist_id,
+    enc.encntr_id,
+
+    enc.location_cd,
+    location_cv.display     AS location_display,
+    location_cv.description AS location_description,
+
+    enc.updt_cnt,
+    from_unixtime(CAST(enc.updt_dt_tm   / 1000 as bigint)) AS updt_dt_tm,
+
+    from_unixtime(CAST(enc.beg_effective_dt_tm   / 1000 as bigint)) AS beg_effective_dt_tm,
+    from_unixtime(CAST(enc.end_effective_dt_tm   / 1000 as bigint)) AS end_effective_dt_tm,
+
+    'NA' AS location_status_cd,
+    'NA' AS location_status_display,
+    'NA' AS location_status_description,
+
+    CASE
+        WHEN enc.arrive_dt_tm IS NULL
+        THEN from_unixtime(CAST(enc.arrive_dt_tm   / 1000 as bigint))
+        ELSE from_unixtime(CAST(enc.reg_dt_tm      / 1000 as bigint))
+    END AS arrive_dt_tm,
+    from_unixtime(CAST(enc.depart_dt_tm   / 1000 as bigint)) AS depart_dt_tm,
+
+    'NA' AS transfer_reason_cd,
+    'NA' AS transfer_reason_display,
+    'NA' AS transfer_reason_description,
+
+
+    'NA' AS location_temp_ind,
+    'NA' AS chart_comment_ind,
+    'NA' AS comment_text,
+
+    enc.loc_facility_cd,
+    loc_facility_cv.display AS loc_facility_display,
+    loc_facility_cv.description AS loc_facility_description,
+
+    enc.loc_building_cd,
+    loc_building_cv.display AS loc_building_display,
+    loc_building_cv.description AS loc_building_description,
+
+    enc.loc_nurse_unit_cd,
+    loc_nurse_unit_cv.display AS loc_nurse_unit_display,
+    loc_nurse_unit_cv.description AS loc_nurse_unit_description,
+
+    enc.loc_room_cd,
+    loc_room_cv.display AS loc_room_display,
+    loc_room_cv.description AS loc_room_description,
+
+    enc.loc_bed_cd,
+    loc_bed_cv.display AS loc_bed_display,
+    loc_bed_cv.description AS loc_bed_description,
+
+    enc.encntr_type_cd,
+    encntr_type_cv.display AS encntr_type_display,
+    encntr_type_cv.description AS encntr_type_description,
+    encntr_type_cv.definition AS encntr_type_definition,
+
+    enc.med_service_cd,
+    med_service_cv.display AS med_service_display,
+    med_service_cv.description AS med_service_description,
+
+    'NA' AS transaction_dt_tm,
+
+    enc.alt_lvl_care_cd,
+    alt_lvl_care_cv.display AS alt_lvl_care_display,
+    alt_lvl_care_cv.description AS alt_lvl_care_description,
+
+    'NA' AS activity_dt_tm,
+
+    enc.program_service_cd,
+    program_service_cv.display AS program_service_display,
+    program_service_cv.description AS program_service_description,
+
+    enc.specialty_unit_cd,
+    specialty_unit_cv.display AS specialty_unit_display,
+    specialty_unit_cv.description AS specialty_unit_description,
+
+    'NA' AS change_bit,
+    'NA' AS tracking_bit,
+
+    enc.accommodation_cd,
+    accommodation_cv.display AS accommodation_display,
+    accommodation_cv.description AS accommodation_description,
+
+
+    enc.accommodation_reason_cd,
+    accommodation_reason_cv.display AS accommodation_reason_display,
+    accommodation_reason_cv.description AS accommodation_reason_description,
+
+    enc.accommodation_request_cd,
+    accommodation_request_cv.display AS accommodation_request_display,
+    accommodation_request_cv.description AS accommodation_request_description,
+
+    enc.admit_type_cd,
+    admit_type_cv.display AS admit_type_display,
+    admit_type_cv.description AS admit_type_description,
+
+    from_unixtime(CAST(enc.alc_decomp_dt_tm   / 1000 as bigint)) AS alc_decomp_dt_tm,
+    from_unixtime(CAST(enc.alt_lvl_care_dt_tm   / 1000 as bigint)) AS alt_lvl_care_dt_tm,
+
+    enc.alc_reason_cd,
+    alc_reason_cv.display AS alc_reason_display,
+    alc_reason_cv.description AS alc_reason_description,
+
+    enc.isolation_cd,
+    isolation_cv.display AS isolation_display,
+    isolation_cv.description AS isolation_description,
+
+    enc.security_access_cd,
+    security_access_cv.display AS security_access_display,
+    security_access_cv.description AS security_access_description,
+
+    enc.service_category_cd,
+    service_category_cv.display AS service_category_display,
+    service_category_cv.description AS service_category_description,
+
+    enc.encntr_type_class_cd,
+    encntr_type_class_cv.display AS encntr_type_class_display,
+    encntr_type_class_cv.description AS encntr_type_class_description
+
+    FROM encounter enc
+
+    JOIN code_value          location_cv
+    ON enc.location_cd = location_cv.code_value
+
+    JOIN code_value            active_status_cv
+    ON enc.active_status_cd   = active_status_cv.code_value
+
+    JOIN code_value            loc_facility_cv
+    ON enc.loc_facility_cd   = loc_facility_cv.code_value
+
+    JOIN code_value            loc_building_cv
+    ON enc.loc_building_cd   = loc_building_cv.code_value
+
+    JOIN code_value            loc_nurse_unit_cv
+    ON enc.loc_nurse_unit_cd   = loc_nurse_unit_cv.code_value
+
+    JOIN code_value            loc_room_cv
+    ON enc.loc_room_cd   = loc_room_cv.code_value
+
+    JOIN code_value            loc_bed_cv
+    ON enc.loc_bed_cd   = loc_bed_cv.code_value
+
+    JOIN code_value            encntr_type_cv
+    ON enc.encntr_type_cd   = encntr_type_cv.code_value
+
+    JOIN code_value            med_service_cv
+    ON enc.med_service_cd   = med_service_cv.code_value
+
+    JOIN code_value            alt_lvl_care_cv
+    ON enc.alt_lvl_care_cd   = alt_lvl_care_cv.code_value
+
+    JOIN code_value            program_service_cv
+    ON enc.program_service_cd   = program_service_cv.code_value
+
+    JOIN code_value            specialty_unit_cv
+    ON enc.specialty_unit_cd   = specialty_unit_cv.code_value
+
+    JOIN code_value            accommodation_cv
+    ON enc.accommodation_cd   = accommodation_cv.code_value
+
+    JOIN code_value            accommodation_reason_cv
+    ON enc.accommodation_reason_cd   = accommodation_reason_cv.code_value
+
+    JOIN code_value            accommodation_request_cv
+    ON enc.accommodation_request_cd   = accommodation_request_cv.code_value
+
+    JOIN code_value            admit_type_cv
+    ON enc.admit_type_cd   = admit_type_cv.code_value
+
+    JOIN code_value            alc_reason_cv
+    ON enc.alc_reason_cd   = alc_reason_cv.code_value
+
+    JOIN code_value           isolation_cv
+    ON enc.isolation_cd   = isolation_cv.code_value
+
+    JOIN code_value           security_access_cv
+    ON enc.security_access_cd   = security_access_cv.code_value
+
+    JOIN code_value           service_category_cv
+    ON enc.service_category_cd   = service_category_cv.code_value
+
+    JOIN code_value           encntr_type_class_cv
+    ON enc.encntr_type_class_cd   = encntr_type_class_cv.code_value
+
+    WHERE enc.active_ind = '1'
+    AND   enc.end_effective_dt_tm > unix_timestamp() * 1000
+    AND enc.encntr_id = '111188703'
+
+    UNION
+
+    -- part 2, encntr_loc_hist
+    SELECT
+    'H' AS origin,
+
+    elh.encntr_loc_hist_id,
+    elh.encntr_id,
+
+    elh.location_cd,
+    location_cv.display     AS location_display,
+    location_cv.description AS location_description,
+
+    elh.updt_cnt,
+    from_unixtime(CAST(elh.updt_dt_tm   / 1000 as bigint)) AS updt_dt_tm,
+
+    from_unixtime(CAST(elh.beg_effective_dt_tm   / 1000 as bigint)) AS beg_effective_dt_tm,
+    from_unixtime(CAST(elh.end_effective_dt_tm   / 1000 as bigint)) AS end_effective_dt_tm,
+
+    elh.location_status_cd,
+    location_status_cv.display AS location_status_display,
+    location_status_cv.description AS location_status_description,
+
+    CASE
+        WHEN elh.arrive_dt_tm IS NULL
+        THEN from_unixtime(CAST(elh.arrive_dt_tm   / 1000 as bigint))
+        ELSE from_unixtime(CAST(enc.reg_dt_tm      / 1000 as bigint))
+    END AS arrive_dt_tm,
+    from_unixtime(CAST(elh.depart_dt_tm   / 1000 as bigint)) AS depart_dt_tm,
+
+    elh.transfer_reason_cd,
+    transfer_reason_cv.display AS transfer_reason_display,
+    transfer_reason_cv.description AS transfer_reason_description,
+
+    elh.location_temp_ind,
+    elh.chart_comment_ind,
+    elh.comment_text,
+
+    elh.loc_facility_cd,
+    loc_facility_cv.display AS loc_facility_display,
+    loc_facility_cv.description AS loc_facility_description,
+
+    elh.loc_building_cd,
+    loc_building_cv.display AS loc_building_display,
+    loc_building_cv.description AS loc_building_description,
+
+    elh.loc_nurse_unit_cd,
+    loc_nurse_unit_cv.display AS loc_nurse_unit_display,
+    loc_nurse_unit_cv.description AS loc_nurse_unit_description,
+
+    elh.loc_room_cd,
+    loc_room_cv.display AS loc_room_display,
+    loc_room_cv.description AS loc_room_description,
+
+    elh.loc_bed_cd,
+    loc_bed_cv.display AS loc_bed_display,
+    loc_bed_cv.description AS loc_bed_description,
+
+    elh.encntr_type_cd,
+    encntr_type_cv.display AS encntr_type_display,
+    encntr_type_cv.description AS encntr_type_description,
+    encntr_type_cv.definition AS encntr_type_definition,
+
+    elh.med_service_cd,
+    med_service_cv.display AS med_service_display,
+    med_service_cv.description AS med_service_description,
+
+    from_unixtime(CAST(elh.transaction_dt_tm   / 1000 as bigint)) AS transaction_dt_tm,
+
+    elh.alt_lvl_care_cd,
+    alt_lvl_care_cv.display AS alt_lvl_care_display,
+    alt_lvl_care_cv.description AS alt_lvl_care_description,
+
+    from_unixtime(CAST(elh.activity_dt_tm   / 1000 as bigint)) AS activity_dt_tm,
+
+    elh.program_service_cd,
+    program_service_cv.display AS program_service_display,
+    program_service_cv.description AS program_service_description,
+
+    elh.specialty_unit_cd,
+    specialty_unit_cv.display AS specialty_unit_display,
+    specialty_unit_cv.description AS specialty_unit_description,
+
+    elh.change_bit,
+    elh.tracking_bit,
+
+    elh.accommodation_cd,
+    accommodation_cv.display AS accommodation_display,
+    accommodation_cv.description AS accommodation_description,
+
+
+    elh.accommodation_reason_cd,
+    accommodation_reason_cv.display AS accommodation_reason_display,
+    accommodation_reason_cv.description AS accommodation_reason_description,
+
+    elh.accommodation_request_cd,
+    accommodation_request_cv.display AS accommodation_request_display,
+    accommodation_request_cv.description AS accommodation_request_description,
+
+    elh.admit_type_cd,
+    admit_type_cv.display AS admit_type_display,
+    admit_type_cv.description AS admit_type_description,
+
+    from_unixtime(CAST(elh.alc_decomp_dt_tm   / 1000 as bigint)) AS alc_decomp_dt_tm,
+    from_unixtime(CAST(elh.alt_lvl_care_dt_tm   / 1000 as bigint)) AS alt_lvl_care_dt_tm,
+
+    elh.alc_reason_cd,
+    alc_reason_cv.display AS alc_reason_display,
+    alc_reason_cv.description AS alc_reason_description,
+
+    elh.isolation_cd,
+    isolation_cv.display AS isolation_display,
+    isolation_cv.description AS isolation_description,
+
+    elh.security_access_cd,
+    security_access_cv.display AS security_access_display,
+    security_access_cv.description AS security_access_description,
+
+    elh.service_category_cd,
+    service_category_cv.display AS service_category_display,
+    service_category_cv.description AS service_category_description,
+
+    elh.encntr_type_class_cd,
+    encntr_type_class_cv.display AS encntr_type_class_display,
+    encntr_type_class_cv.description AS encntr_type_class_description
+
+    FROM encntr_loc_hist elh
+
+    JOIN encounter enc
+    ON elh.encntr_id = enc.encntr_id
+
+    JOIN code_value          location_cv
+    ON elh.location_cd = location_cv.code_value
+
+    JOIN code_value            active_status_cv
+    ON elh.active_status_cd   = active_status_cv.code_value
+
+    JOIN code_value            location_status_cv
+    ON elh.location_status_cd   = location_status_cv.code_value
+
+    JOIN code_value            transfer_reason_cv
+    ON elh.transfer_reason_cd   = transfer_reason_cv.code_value
+
+    JOIN code_value            loc_facility_cv
+    ON elh.loc_facility_cd   = loc_facility_cv.code_value
+
+    JOIN code_value            loc_building_cv
+    ON elh.loc_building_cd   = loc_building_cv.code_value
+
+    JOIN code_value            loc_nurse_unit_cv
+    ON elh.loc_nurse_unit_cd   = loc_nurse_unit_cv.code_value
+
+    JOIN code_value            loc_room_cv
+    ON elh.loc_room_cd   = loc_room_cv.code_value
+
+    JOIN code_value            loc_bed_cv
+    ON elh.loc_bed_cd   = loc_bed_cv.code_value
+
+    JOIN code_value            encntr_type_cv
+    ON elh.encntr_type_cd   = encntr_type_cv.code_value
+
+    JOIN code_value            med_service_cv
+    ON elh.med_service_cd   = med_service_cv.code_value
+
+    JOIN code_value            alt_lvl_care_cv
+    ON elh.alt_lvl_care_cd   = alt_lvl_care_cv.code_value
+
+    JOIN code_value            program_service_cv
+    ON elh.program_service_cd   = program_service_cv.code_value
+
+    JOIN code_value            specialty_unit_cv
+    ON elh.specialty_unit_cd   = specialty_unit_cv.code_value
+
+    JOIN code_value            accommodation_cv
+    ON elh.accommodation_cd   = accommodation_cv.code_value
+
+    JOIN code_value            accommodation_reason_cv
+    ON elh.accommodation_reason_cd   = accommodation_reason_cv.code_value
+
+    JOIN code_value            accommodation_request_cv
+    ON elh.accommodation_request_cd   = accommodation_request_cv.code_value
+
+    JOIN code_value            admit_type_cv
+    ON elh.admit_type_cd   = admit_type_cv.code_value
+
+    JOIN code_value            alc_reason_cv
+    ON elh.alc_reason_cd   = alc_reason_cv.code_value
+
+    JOIN code_value           isolation_cv
+    ON elh.isolation_cd   = isolation_cv.code_value
+
+    JOIN code_value           security_access_cv
+    ON elh.security_access_cd   = security_access_cv.code_value
+
+    JOIN code_value           service_category_cv
+    ON elh.service_category_cd   = service_category_cv.code_value
+
+    JOIN code_value           encntr_type_class_cv
+    ON elh.encntr_type_class_cd   = encntr_type_class_cv.code_value
+
+    WHERE elh.active_ind = '1'
+    AND   elh.end_effective_dt_tm > unix_timestamp() * 1000
+    AND   elh.encntr_id = '111188703'
+
+  ) iq
+
+
+) oq
+
+WHERE
+    location_cd_chg       = 1
+OR  med_service_cd_chg    = 1
+OR  accommodation_cd_chg  = 1
+OR  alt_lvl_care_cd_chg   = 1
+OR  specialty_unit_cd_chg = 1
+--loc_bed_cd_chg = 1
+
+ORDER BY
+encntr_id,
+origin DESC,
+arrive_dt_tm DESC

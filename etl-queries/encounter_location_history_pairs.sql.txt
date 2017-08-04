@@ -1,0 +1,51 @@
+-- encounter_location_history creates a record of patient movements between locations or levels of care
+-- these queries identifies the distinct [from / to] pairings in encounter_location_history
+
+-- location
+SELECT 
+    concat('from:[', location_display, '] to:[', next_location_display,']') AS location_display_pair
+,   COUNT(1)
+FROM DR_location_changes
+WHERE location_display <> next_location_display
+GROUP BY
+    concat('from:[', location_display, '] to:[', next_location_display,']')
+ORDER BY 2 DESC
+
+-- med_service
+SELECT 
+    concat('from:[', med_service_display, '] to:[', next_med_service_display,']') AS med_service_display_pair
+,   COUNT(1)
+FROM DR_location_changes
+GROUP BY
+    concat('from:[', med_service_display, '] to:[', next_med_service_display,']')
+ORDER BY 2 DESC
+
+-- accomodation
+SELECT 
+    concat('from:[', accommodation_display, '] to:[', next_accommodation_display,']') AS accommodation_display_pair
+,   COUNT(1)
+FROM DR_location_changes
+WHERE accommodation_display <> next_accommodation_display
+GROUP BY
+    concat('from:[', accommodation_display, '] to:[', next_accommodation_display,']')
+ORDER BY 2 DESC
+
+-- alt_lvl_care
+SELECT 
+    concat('from:[', alt_lvl_care_display, '] to:[', next_alt_lvl_care_display,']') AS alt_lvl_care_display_pair
+,   COUNT(1)
+FROM DR_location_changes
+WHERE alt_lvl_care_display <> next_alt_lvl_care_display
+GROUP BY
+    concat('from:[', alt_lvl_care_display, '] to:[', next_alt_lvl_care_display,']')
+ORDER BY 2 DESC
+
+-- specialty_unit
+SELECT 
+    concat('from:[', specialty_unit_display, '] to:[', next_specialty_unit_display,']') AS specialty_unit_display_pair
+,   COUNT(1)
+FROM DR_location_changes
+WHERE specialty_unit_display <> next_specialty_unit_display
+GROUP BY
+    concat('from:[', specialty_unit_display, '] to:[', next_specialty_unit_display,']')
+ORDER BY 2 DESC

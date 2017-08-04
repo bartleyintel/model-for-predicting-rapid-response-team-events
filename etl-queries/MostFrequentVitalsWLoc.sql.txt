@@ -1,0 +1,115 @@
+-- Look up the counts for a range of vital signs
+
+SELECT ce.event_cd , cv_event_cd.description AS event_description, enc.loc_facility_cd, cv_locations.description as loc_desc,  count(1) as count
+
+FROM clinical_event        ce
+
+JOIN encounter enc
+ON ce.encntr_id = enc.encntr_id
+
+
+-- code value lookups
+LEFT OUTER JOIN code_value   cv_event_cd
+ON   ce.event_cd           = cv_event_cd.code_value
+
+LEFT OUTER JOIN code_value cv_locations
+ON enc.loc_facility_cd = cv_locations.code_value
+
+-- to look up for RRT only, uncomment this section
+-- WHERE ce.encntr_id IN ( SELECT DISTINCT encntr_id
+--                       FROM clinical_event
+--                       WHERE event_cd = '54411998'
+--                       AND result_status_cd NOT IN ('31', '36')
+--                       AND valid_until_dt_tm > 4e12
+--                       AND event_class_cd not in ('654645')
+--                      )
+
+WHERE enc.loc_facility_cd IN ('633867', '4382264', '4382273')
+
+AND ce.event_cd IN (
+'234049565', -- [OXYGENTHERAPY] Oxygen therapy
+'313762824', -- [DIASTOLICBLOODPRESSURE] Diastolic Blood Pressure
+'313762876', -- [SYSTOLICBLOODPRESSURE] Systolic Blood Pressure
+'316450',    -- [FIO2] Fraction of Inspired Oxygen (FiO2)
+'12597',     -- [FIO2] FIO2
+'2700535',   -- [TEMPERATUREBLADDER] Temperature Bladder
+'2700534',   -- [TEMPERATUREBLADDER] Temperature Bladder
+'2700538',   -- [TEMPERATUREESOPHAGEAL] Temperature Esophageal
+'2700537',   -- [TEMPERATUREESOPHAGEAL] Temperature Esophageal
+'2700541',   -- [HEARTRATEMONITORED] Heart Rate Monitored
+'2700540',   -- [HEARTRATEMONITORED] Heart Rate Monitored
+'2696746',   -- [PERIPHERALPULSERATE] Peripheral Pulse Rate
+'2696748',   -- [RESPIRATORYRATE] Respiratory Rate
+'703526',    -- [TEMPERATURETYMPANIC] Temperature Tympanic
+'703527',    -- [TEMPERATURETYMPANIC] Temperature Tympanic
+'703530',    -- [TEMPERATURERECTAL] Temperature Rectal
+'703531',    -- [TEMPERATURERECTAL] Temperature Rectal
+'703535',    -- [TEMPERATUREAXILLARY] Temperature Axillary
+'703536',    -- [TEMPERATUREAXILLARY] Temperature Axillary
+'703540',    -- [RESPIRATORYRATE] Respiratory Rate
+'703541',    -- [RESPIRATORYRATE] Respiratory Rate
+'703306',    -- [MEANARTERIALPRESSURE] Mean Arterial Pressure
+'703307',    -- [MEANARTERIALPRESSURE] Mean Arterial Pressure
+'703960',    -- [OXYGENTHERAPY] Oxygen Therapy
+'2700657',   -- [FIO2] FiO2
+'4648657',   -- [MEANARTERIALPRESSUREINVASIVE] Mean Arterial Pressure, Invasive
+'703516',    -- [DIASTOLICBLOODPRESSURE] Diastolic Blood Pressure
+'703517',    -- [DIASTOLICBLOODPRESSURE] Diastolic Blood Pressure
+'703546',    -- [TEMPERATUREINTRAVASCULAR] Temperature Intravascular
+'703547',    -- [TEMPERATUREINTRAVASCULAR] Temperature Intravascular
+'703558',    -- [TEMPERATUREORAL] Temperature Oral
+'703559',    -- [TEMPERATUREORAL] Temperature Oral
+'703569',    -- [OXYGENFLOWRATE] Oxygen Flow Rate
+'703570',    -- [OXYGENFLOWRATE] Oxygen Flow Rate
+'703501',    -- [SYSTOLICBLOODPRESSURE] Systolic Blood Pressure
+'703502',    -- [SYSTOLICBLOODPRESSURE] Systolic Blood Pressure
+'703511',    -- [PERIPHERALPULSERATE] Peripheral Pulse Rate
+'703512',    -- [PERIPHERALPULSERATE] Peripheral Pulse Rate
+'2808511',   -- [SYSTOLICBLOODPRESSUREINVASIVE] Systolic Blood Pressure Invasive
+'2808516',   -- [DIASTOLICBLOODPRESSUREINVASIVE] Diastolic Blood Pressure Invasive
+'2808515',   -- [DIASTOLICBLOODPRESSUREINVASIVE] Diastolic Blood Pressure Invasive
+'4648659',   -- [MEANARTERIALPRESSUREINVASIVE] Mean Arterial Pressure, Invasive
+'2808512',   -- [SYSTOLICBLOODPRESSUREINVASIVE] Systolic Blood Pressure Invasive
+'3623994',   -- [SPO2] SpO2
+'3623995',   -- [SPO2] SpO2
+'3883398',   -- [OXYGENTHERAPY] Oxygen Therapy
+'4438077',   -- [RESPIRATORYRATE] Respiratory Rate
+'4438302',   -- [MEANARTERIALPRESSURE] Mean Arterial Pressure
+'4438287',   -- [FIO2] FIO2
+'4438295',   -- [SPO2] SPO2 %
+'4438143',   -- [TEMPERATURERECTAL] Temperature - Rectal
+'27573911',  -- [TEMPERATURETEMPORAL] Temperature Temporal
+'27573923',  -- [TEMPERATURETEMPORAL] Temperature Temporal
+'3995620',   -- [TEMPERATUREAXILLARY] Temperature Axillary
+'3995621',   -- [TEMPERATUREORAL] Temperature Oral
+'51130653',  -- [TEMPERATURETEMPORAL] Temperature Temporal
+'3995622',   -- [TEMPERATURETYMPANIC] Temperature Tympanic
+'3995624',   -- [TEMPERATURERECTAL] Temperature Rectal
+'3995625',   -- [TEMPERATUREINTRAVASCULAR] Temperature Intravascular
+'3995627',   -- [TEMPERATUREBLADDER] Temperature Bladder
+'3995628',   -- [TEMPERATUREESOPHAGEAL] Temperature Esophageal
+'3995631',   -- [PERIPHERALPULSERATE] Peripheral Pulse Rate
+'3995632',   -- [HEARTRATEMONITORED] Heart Rate Monitored
+'3995633',   -- [RESPIRATORYRATE] Respiratory Rate
+'3995634',   -- [SYSTOLICBLOODPRESSURE] Systolic Blood Pressure
+'3995635',   -- [DIASTOLICBLOODPRESSURE] Diastolic Blood Pressure
+'3995636',   -- [MEANARTERIALPRESSURE] Mean Arterial Pressure
+'3995637',   -- [MEANARTERIALPRESSUREINVASIVE] Mean Arterial Pressure, Invasive
+'3995638',   -- [SYSTOLICBLOODPRESSUREINVASIVE] Systolic Blood Pressure Invasive
+'3995639',   -- [DIASTOLICBLOODPRESSUREINVASIVE] Diastolic Blood Pressure Invasive
+'4861961',   -- [FIO2] FiO2
+'35182975',  -- [FIO2] FiO2-BBO2-ALS:
+'35184348',  -- [FIO2] FiO2-BBO2-LDR:
+'35184583',  -- [TEMPERATUREAXILLARY] Temperature Axillary-OR Assessment:
+'35253819',  -- [FIO2] FiO2 (%)
+'3996460',   -- [OXYGENFLOWRATE] Oxygen Flow Rate
+'3995783',   -- [RESPIRATORYRATE] Respiratory Rate Apgar
+'3996366',   -- [RESPIRATORYRATE] Weaning Respiratory Rate
+'3996450',   -- [OXYGENTHERAPY] Oxygen Therapy
+'3996452',   -- [SPO2] SpO2
+'111810901', -- [OXYGENTHERAPY] Oxygen Therapy
+'112278774'  -- [FIO2] FIO2
+)
+
+GROUP BY enc.loc_facility_cd, loc_desc, ce.event_cd, event_description
+ORDER BY count DESC;
